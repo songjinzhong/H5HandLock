@@ -4,6 +4,7 @@
     this.n = option.n || 3;
     this.n = (this.n >= 2 && this.n <= 5) ? this.n : 3; // n 太大，你能记得住吗
     this.touchPoints = [];
+    this.touchFlag = false; // 用于判断是否 touch 到 circle
   }
   handLock.prototype = {
     init: function(){
@@ -25,7 +26,7 @@
       this.width = width;
     },
 
-    createCircles: function(){
+    createCircles: function(){ // 画圆
       var n = this.n;
       this.r = this.width / (2 + 4 * n) // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
       r = this.r;
@@ -40,34 +41,48 @@
           this.circles.push(p);
         }
       }
-      this.ctx.clearRect(0, 0, this.width, this.width); // 为了防止重复画
-      for(var i = 0; i < this.circles.length; i++){
-        this.drawCircle(this.circles[i].x, this.circles[i].y);
-      }
+      this.drawCircles();
     },
 
-    createListener: function(){
-      var self = this;
+    createListener: function(){ // 创建监听事件
+      var self = this, temp, r = this.r;
       this.canvas.addEventListener('touchstart', function(e){
         var p = self.getTouchPos(e);
-        self.touchPoints.push(p);
+        for(var i = 0; i < self.circles.length; i++){
+          temp = self.circles[i];
+          if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
+            self.touchPoints.push(temp);
+            self.touchFlag = true;
+            break;
+          }
+        }
       }, false)
       this.canvas.addEventListener('touchmove', function(e){
         var p = self.getTouchPos(e);
-        self.lastPos = p;
-        self.update(p);
+        if(self.touchFlag){
+          self.update(p);
+        }else{
+          for(var i = 0; i < self.circles.length; i++){
+            temp = self.circles[i];
+            if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
+              self.touchPoints.push(temp);
+              self.touchFlag = true;
+              break;
+            }
+          }
+        }
       }, false)
       this.canvas.addEventListener('touchend', function(e){
-        self.touchPoints = [];
+        if(self.touchFlag){
+          self.touchFlag = false;
+          self.touchPoints = [];
+        }
       }, false)
     },
 
-    update: function(p){
-      this.ctx.clearRect(0, 0, this.width, this.width);
-      for(var i = 0; i < this.circles.length; i++){
-        this.drawCircle(this.circles[i].x, this.circles[i].y);
-      }
-      this.drawLine(this.lastPos);
+    update: function(p){ // 更新 touchmove
+      this.drawCircles();
+      this.drawLine(p);
     },
 
     drawCircle: function(x, y){ // 画圆
@@ -77,6 +92,13 @@
       this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
       this.ctx.closePath();
       this.ctx.stroke();
+    },
+
+    drawCircles: function(){ // 画所有圆
+      this.ctx.clearRect(0, 0, this.width, this.width); // 为了防止重复画
+      for(var i = 0; i < this.circles.length; i++){
+        this.drawCircle(this.circles[i].x, this.circles[i].y);
+      }
     },
 
     drawLine: function(p){
