@@ -17,9 +17,11 @@
   <div id="handlock"></div>
   <script type="text/javascript" src="handlock.js"></script>
   <script type="text/javascript">
-    new handLock({
-      el: document.getElementById('handlock')
-    }).init();
+    var h = new handLock({
+      el: document.getElementById('handlock'),
+      n: 3
+    });
+    h.init();
   </script>
 </body>
 </html>
