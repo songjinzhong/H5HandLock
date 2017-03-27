@@ -22,12 +22,12 @@
 
       this.ctx = canvas.getContext('2d');
       this.canvas = canvas;
+      this.width = width;
     },
 
     createCircles: function(){
-      var ctx = this.ctx,
-        n = this.n;
-      this.r = ctx.canvas.width / (2 + 4 * n) // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
+      var n = this.n;
+      this.r = this.width / (2 + 4 * n) // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
       r = this.r;
       this.circles = []; // 用来存储 n 个点的位置
       for(var i = 0; i < n; i++){
@@ -40,10 +40,10 @@
           this.circles.push(p);
         }
       }
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // 为了防止重复画
-      this.circles.forEach(function(v){
-        this.drawCircle(v.x, v.y);
-      }.bind(this))
+      this.ctx.clearRect(0, 0, this.width, this.width); // 为了防止重复画
+      for(var i = 0; i < this.circles.length; i++){
+        this.drawCircle(this.circles[i].x, this.circles[i].y);
+      }
     },
 
     createListener: function(){
@@ -54,12 +54,20 @@
       }, false)
       this.canvas.addEventListener('touchmove', function(e){
         var p = self.getTouchPos(e);
-        this.lastPos = p;
+        self.lastPos = p;
+        self.update(p);
       }, false)
       this.canvas.addEventListener('touchend', function(e){
-        self.drawLine(this.lastPos);
         self.touchPoints = [];
       }, false)
+    },
+
+    update: function(p){
+      this.ctx.clearRect(0, 0, this.width, this.width);
+      for(var i = 0; i < this.circles.length; i++){
+        this.drawCircle(this.circles[i].x, this.circles[i].y);
+      }
+      this.drawLine(this.lastPos);
     },
 
     drawCircle: function(x, y){ // 画圆
