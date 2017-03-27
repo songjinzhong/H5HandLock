@@ -2,12 +2,14 @@
   var handLock = function(option){
     this.el = option.el || w.document.body;
     this.n = option.n || 3;
-    this.n = (this.n >= 2 && this.n <= 5) ? this.n : 3; // 你能记得住吗
+    this.n = (this.n >= 2 && this.n <= 5) ? this.n : 3; // n 太大，你能记得住吗
+    this.touchPoints = [];
   }
   handLock.prototype = {
     init: function(){
       this.createCanvas();
       this.createCircles();
+      this.createListener();
     },
 
     createCanvas: function(){ // 创建 canvas
@@ -19,11 +21,11 @@
       this.el.appendChild(canvas);
 
       this.ctx = canvas.getContext('2d');
+      this.canvas = canvas;
     },
 
     createCircles: function(){
       var ctx = this.ctx,
-        drawCircle = this.drawCircle,
         n = this.n;
       this.r = ctx.canvas.width / (2 + 4 * n) // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
       r = this.r;
@@ -40,17 +42,54 @@
       }
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // 为了防止重复画
       this.circles.forEach(function(v){
-        drawCircle(ctx, v.x, v.y);
-      })
+        this.drawCircle(v.x, v.y);
+      }.bind(this))
     },
 
-    drawCircle: function(ctx, x, y){ // 画圆
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
-      ctx.closePath();
-      ctx.stroke();
+    createListener: function(){
+      var self = this;
+      this.canvas.addEventListener('touchstart', function(e){
+        var p = self.getTouchPos(e);
+        self.touchPoints.push(p);
+      }, false)
+      this.canvas.addEventListener('touchmove', function(e){
+        var p = self.getTouchPos(e);
+        this.lastPos = p;
+      }, false)
+      this.canvas.addEventListener('touchend', function(e){
+        self.drawLine(this.lastPos);
+        self.touchPoints = [];
+      }, false)
+    },
+
+    drawCircle: function(x, y){ // 画圆
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
+      this.ctx.closePath();
+      this.ctx.stroke();
+    },
+
+    drawLine: function(p){
+      this.ctx.beginPath();
+      this.ctx.lineWidth = 3;
+      this.ctx.moveTo(this.touchPoints[0].x, this.touchPoints[0].y);
+      for (var i = 1 ; i < this.touchPoints.length ; i++) {
+        this.ctx.lineTo(this.touchPoints[i].x, this.touchPoints[i].y);
+      }
+      this.ctx.lineTo(p.x, p.y);
+      this.ctx.stroke();
+      this.ctx.closePath();
+    },
+
+    getTouchPos: function(e){ // 获得触摸点的相对位置
+      var rect = e.target.getBoundingClientRect();
+      var p = { // 相对坐标
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+      return p;
     }
   }
 
