@@ -6,9 +6,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="author" content="宋进忠">
   <meta name="email" content="songjz.ecnu@gmail.com">
+  <style type="text/css">
+    *{ padding: 0;margin: 0; }
+    html, body, #handlock{ width: 100%; height: 100%;}
+    body{ background-color: #575d6f; text-align: center;}
+    #handlock canvas{ margin: 0 auto; }
+  </style>
 </head>
 <body>
   <div id="handlock"></div>
   <script type="text/javascript" src="handlock.js"></script>
+  <script type="text/javascript">
+    new handLock({
+      el: document.getElementById('handlock')
+    }).init();
+  </script>
 </body>
 </html>
