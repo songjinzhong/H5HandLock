@@ -373,6 +373,29 @@ this.dom.checkPass.addEventListener('click', function(e){
 
 **ps：这里面还有几个小的 bug**，因为 model 只有 3 个，所以设置的时候，当点击重置密码的时候，没有设置密码成功，又切成验证密码状态，此时无法提升沿用旧密码，原因是 **model 只有三个**。
 
+### 5. 添加 touchend 颜色变化
+
+实现这个基本上就大功告成了，这个功能最主要的是给用户一个提醒，若用户划出的密码符合规范，显示绿色，若不符合规范或错误，显示红色警告。
+
+因为之前已经设置了一个 succ 变量，专门用于重绘。
+
+```javascript
+drawEndCircles: function(color){ // end 时重绘已经 touch 的圆
+  for(var i = 0; i < this.touchCircles.length; i++){
+    this.drawCircle(this.touchCircles[i].x, this.touchCircles[i].y, color);
+  }
+},
+
+// 调用
+if(succ){
+  this.drawEndCircles('#2CFF26');
+}else{
+  this.drawEndCircles('red');
+}
+```
+
+那么，一个可以演示的版本就生成了，尽管还存在一些 bug，随后会来解决。（详情分支 password）
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)

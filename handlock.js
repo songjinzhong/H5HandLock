@@ -174,10 +174,15 @@
           this.showInfo('恭喜你，验证通过', 1000);
         }
       }
+      if(succ){
+        this.drawEndCircles('#2CFF26');
+      }else{
+        this.drawEndCircles('red');
+      }
     },
 
-    drawCircle: function(x, y){ // 画圆
-      this.ctx.strokeStyle = '#ffa726';
+    drawCircle: function(x, y, color){ // 画圆
+      this.ctx.strokeStyle = color || '#ffa726';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
       this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
@@ -189,6 +194,12 @@
       this.ctx.clearRect(0, 0, this.width, this.width); // 为了防止重复画
       for(var i = 0; i < this.circles.length; i++){
         this.drawCircle(this.circles[i].x, this.circles[i].y);
+      }
+    },
+
+    drawEndCircles: function(color){ // end 时重绘已经 touch 的圆
+      for(var i = 0; i < this.touchCircles.length; i++){
+        this.drawCircle(this.touchCircles[i].x, this.touchCircles[i].y, color);
       }
     },
 
