@@ -7,11 +7,18 @@
     this.touchCircles = [];// 用来存储已经触摸到的所有 circle
     this.restCircles = [];// 还未触到的 circle
     this.touchFlag = false; // 用于判断是否 touch 到 circle
+    this.dom = {
+      info: option.info,
+      message: option.message,
+      setPass: option.setPass,
+      checkPass: option.checkPass
+    }
   }
   handLock.prototype = {
     init: function(){
       this.createCanvas();
       this.createCircles();
+      this.initPass();
       this.createListener();
     },
 
@@ -46,6 +53,14 @@
       this.drawCircles();
     },
 
+    initPass: function(){ // 将密码初始化
+      this.lsPass = w.localStorage.getItem('HandLockPass') ? {
+        model: 1,
+        pass: w.localStorage.getItem('HandLockPass').split('-') // 由于密码是字符串，要先转数组
+      } : { model: 2 };
+      this.updateMessage();
+    },
+
     createListener: function(){ // 创建监听事件
       var self = this, temp, r = this.r;
       this.canvas.addEventListener('touchstart', function(e){
@@ -63,6 +78,7 @@
       this.canvas.addEventListener('touchend', function(e){
         if(self.touchFlag){
           self.touchFlag = false;
+          self.checkPass();
           self.touchCircles.forEach(function(v){
             self.restCircles.push(v);
           })
@@ -79,6 +95,69 @@
       this.judgePos(p);
       this.drawLine(p);
       this.drawPoints();
+    },
+
+    checkPass: function(){
+      var succ, model = this.lsPass.model;
+      if(model == 2){// 设置密码
+        if(this.touchCircles.length < 5){ // 验证密码长度
+          succ = false;
+          this.showInfo('密码长度至少为 5！', 1000);
+        }else{
+          succ = true;
+          this.lsPass.temp = []; // 将密码放到临时区存储
+          for(var i = 0; i < this.touchCircles.length; i++){
+            this.lsPass.temp.push(this.touchCircles[i].id);
+          }
+          this.lsPass.model = 3;
+          this.showInfo('请再次输入密码', 1000);
+          this.updateMessage();
+        }
+      }else if(model == 3){ // 确认密码
+        var flag = true;
+        // 先要验证密码是否正确
+        if(this.touchCircles.length == this.lsPass.temp.length){
+          var tc = this.touchCircles, lt = this.lsPass.temp;
+          for(var i = 0; i < tc.length; i++){
+            if(tc[i].id != lt[i]){
+              flag = false;
+            }
+          }
+        }else{
+          flag = false;
+        }
+        if(!flag){
+          succ = false;
+          this.showInfo('两次密码不一致，请重新输入', 1000);
+          this.lsPass.model = 2; // 由于密码不正确，重新回到 model 2
+          this.updateMessage();
+        }else{
+          succ = true; // 密码正确，localStorage 存储，并设置状态为 model 1
+          w.localStorage.setItem('HandLockPass', this.lsPass.temp.join('-')); // 存储字符串
+          this.lsPass.model = 1; 
+          this.lsPass.pass = this.lsPass.temp;
+          this.updateMessage();
+        }
+        delete this.lsPass.temp; // 很重要，一定要删掉，bug
+      }else if(model == 1){ // 验证密码
+        var tc = this.touchCircles, lp = this.lsPass.pass, flag = true;
+        if(tc.length == lp.length){
+          for(var i = 0; i < tc.length; i++){
+            if(tc[i].id != lp[i]){
+              flag = false;
+            }
+          }
+        }else{
+          flag = false;
+        }
+        if(!flag){
+          succ = false;
+          this.showInfo('很遗憾，密码错误', 1000);
+        }else{
+          succ = true;
+          this.showInfo('恭喜你，验证通过', 1000);
+        }
+      }
     },
 
     drawCircle: function(x, y){ // 画圆
@@ -142,6 +221,28 @@
 
     reset: function(){
       this.drawCircles();
+    },
+
+    updateMessage: function(){ // 根据当前模式，更新 dom
+      if(this.lsPass.model == 2){ // 2 表示设置密码
+        this.dom.setPass.checked = true;
+        this.dom.message.innerHTML = '请设置手势密码';
+      }else if(this.lsPass.model == 1){ // 1 表示验证密码
+        this.dom.checkPass.checked = true;
+        this.dom.message.innerHTML = '请验证手势密码';
+      }else if(this.lsPass.model = 3){ // 3 表示确认密码
+        this.dom.setPass.checked = true;
+        this.dom.message.innerHTML = '请再次输入密码';
+      }
+    },
+
+    showInfo: function(message, timer){ // 专门用来显示 info
+      var info = this.dom.info;
+      info.innerHTML = message;
+      info.style.display = 'block';
+      setTimeout(function(){
+        info.style.display = '';
+      }, 1000)
     }
   }
 

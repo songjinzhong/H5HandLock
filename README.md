@@ -195,13 +195,16 @@ drawPoints: function(){
 将添加到 dom 已 option 的形式传给 handLock：
 
 ```javascript
-var select = document.getElementById('select'),
+var el = document.getElementById('handlock'),
+  info = el.getElementsByClassName('info')[0],
+  select = document.getElementById('select'),
   message = select.getElementsByClassName('message')[0],
   radio = select.getElementsByClassName('radio')[0],
   setPass = radio.children[0].children[0],
   checkPass = radio.children[1].children[0];
 var h = new handLock({
-  el: document.getElementById('handlock'),
+  el: el,
+  info: info,
   message: message,
   setPass: setPass,
   checkPass: checkPass,
@@ -210,8 +213,146 @@ var h = new handLock({
 h.init();
 ```
 
+### 2. info 信息显示
+
+关于 info 信息显示，自己写了一个悬浮窗，然后默认为 `display: none`，然后写了一个 `showInfo` 函数用来显示提示信息，直接调用：
+
+```javascript
+showInfo: function(message, timer){ // 专门用来显示 info
+  var info = this.dom.info;
+  info.innerHTML = message;
+  info.style.display = 'block';
+  setTimeout(function(){
+    info.style.display = '';
+  }, 1000)
+}
+```
+
+关于 info 的样式，在 html 中呢。
+
+### 3. 关于密码
+
+先不考虑从 localStorage 读取到情况，新加一个 lsPass 对象，专门用于存储密码，由于密码情况比较多，比如设置密码，二次确认密码，验证密码，为了方便管理，暂时设置了密码的三种模式，分别是：
+
+>model：1 验证密码模式
+
+>model：2 设置密码模式
+
+>model：3 设置密码二次验证
+
+具体看下面这个图：
+
+![](imgs/llc.png)
+
+这三种 model ，只要处理好它们之间如何跳转就 ok 了。
+
+所以就有了 initPass：
+
+```javascript
+initPass: function(){ // 将密码初始化
+  this.lsPass = w.localStorage.getItem('HandLockPass') ? {
+    model: 1,
+    pass: w.localStorage.getItem('HandLockPass').split('-')
+  } : { model: 2 };
+  this.updateMessage();
+},
+
+updateMessage: function(){ // 根据当前模式，更新 dom
+  if(this.lsPass.model == 2){
+    this.dom.setPass.checked = true;
+    this.dom.message.innerHTML = '请设置手势密码';
+  }else if(this.lsPass.model == 1){
+    this.dom.checkPass.checked = true;
+    this.dom.message.innerHTML = '请验证手势密码';
+  }else if(this.lsPass.model = 3){
+    this.dom.setPass.checked = true;
+    this.dom.message.innerHTML = '请再次输入密码';
+  }
+},
+```
+
+有必要再来介绍一下 lsPass 的格式：
+
+```javascript
+this.lsPass = {
+  model：1, // 表示当前的模式
+  pass: [0, 1, 2, 4, 5] // 表示当前的密码，可能不存在
+}
+```
+
+因为之前已经有了一个基本的实现框架，现在只需要在 touchend 之后，写一个函数，功能就是先对当前的 model 进行判断，实现对应的功能，这里要用到 touchCircles 数组，表示密码的顺序：
+
+```javascript
+checkPass: function(){
+  var succ, model = this.lsPass.model; //succ 以后会用到
+  if(model == 2){ // 设置密码
+    if(this.touchCircles.length < 5){ // 验证密码长度
+      succ = false;
+      this.showInfo('密码长度至少为 5！', 1000);
+    }else{
+      succ = true;
+      this.lsPass.temp = []; // 将密码放到临时区存储
+      for(var i = 0; i < this.touchCircles.length; i++){
+        this.lsPass.temp.push(this.touchCircles[i].id);
+      }
+      this.lsPass.model = 3;
+      this.showInfo('请再次输入密码', 1000);
+      this.updateMessage();
+    }
+  }else if(model == 3){// 确认密码
+    var flag = true;
+    // 先要验证密码是否正确
+    if(this.touchCircles.length == this.lsPass.temp.length){
+      var tc = this.touchCircles, lt = this.lsPass.temp;
+      for(var i = 0; i < tc.length; i++){
+        if(tc[i].id != lt[i]){
+          flag = false;
+        }
+      }
+    }else{
+      flag = false;
+    }
+    if(!flag){
+      succ = false;
+      this.showInfo('两次密码不一致，请重新输入', 1000);
+      this.lsPass.model = 2; // 由于密码不正确，重新回到 model 2
+      this.updateMessage();
+    }else{
+      succ = true; // 密码正确，localStorage 存储，并设置状态为 model 1
+      w.localStorage.setItem('HandLockPass', this.lsPass.temp.join('-')); // 存储字符串
+      this.lsPass.model = 1; 
+      this.lsPass.pass = this.lsPass.temp;
+      this.updateMessage();
+    }
+    delete this.lsPass.temp; // 很重要，一定要删掉，bug
+  }else if(model == 1){ // 验证密码
+    var tc = this.touchCircles, lp = this.lsPass.pass, flag = true;
+    if(tc.length == lp.length){
+      for(var i = 0; i < tc.length; i++){
+        if(tc[i].id != lp[i]){
+          flag = false;
+        }
+      }
+    }else{
+      flag = false;
+    }
+    if(!flag){
+      succ = false;
+      this.showInfo('很遗憾，密码错误', 1000);
+    }else{
+      succ = true;
+      this.showInfo('恭喜你，验证通过', 1000);
+    }
+  }
+},
+```
+
+密码的设置要参考前面那张图，要时刻警惕状态的改变。
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)
 
 >[Canvas教程](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial)
+
+>[js获取单选框里面的值](http://www.cnblogs.com/wangkongming/archive/2013/08/30/3291081.html)
