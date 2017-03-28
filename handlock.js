@@ -82,7 +82,7 @@
     },
 
     drawCircle: function(x, y){ // 画圆
-      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.strokeStyle = '#ffa726';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
       this.ctx.arc(x, y, this.r, 0, Math.PI * 2, true);
@@ -111,7 +111,7 @@
 
     drawPoints: function(){
       for (var i = 0 ; i < this.touchCircles.length ; i++) {
-        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillStyle = '#ffa726';
         this.ctx.beginPath();
         this.ctx.arc(this.touchCircles[i].x, this.touchCircles[i].y, this.r / 2, 0, Math.PI * 2, true);
         this.ctx.closePath();
