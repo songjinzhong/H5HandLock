@@ -15,7 +15,7 @@
     }
   }
   handLock.prototype = {
-    init: function(){
+    init: function(){ // 函数入口
       this.createCanvas();
       this.createCircles();
       this.initPass();
@@ -53,7 +53,7 @@
       this.drawCircles();
     },
 
-    initPass: function(){ // 将密码初始化
+    initPass: function(){ // 密码初始化
       this.lsPass = w.localStorage.getItem('HandLockPass') ? {
         model: 1,
         pass: w.localStorage.getItem('HandLockPass').split('-') // 由于密码是字符串，要先转数组
@@ -113,7 +113,7 @@
       this.drawPoints();
     },
 
-    checkPass: function(){
+    checkPass: function(){ // 判断当前 model 和检查密码
       var succ, model = this.lsPass.model;
       if(model == 2){// 设置密码
         if(this.touchCircles.length < 5){ // 验证密码长度
@@ -204,7 +204,7 @@
       }
     },
 
-    drawLine: function(p){
+    drawLine: function(p){ // 画折线
       this.ctx.beginPath();
       this.ctx.lineWidth = 3;
       this.ctx.moveTo(this.touchCircles[0].x, this.touchCircles[0].y);
@@ -216,7 +216,7 @@
       this.ctx.closePath();
     },
 
-    drawPoints: function(){
+    drawPoints: function(){ // 画实心圆(点)
       for (var i = 0 ; i < this.touchCircles.length ; i++) {
         this.ctx.fillStyle = '#ffa726';
         this.ctx.beginPath();
@@ -247,7 +247,7 @@
       }
     },
 
-    reset: function(){
+    reset: function(){ // 重置 canvas
       this.drawCircles();
     },
 
@@ -273,8 +273,6 @@
       }, timer || 1000)
     }
   }
-
-  // 一些有用的函数
 
   w.handLock = handLock; // 赋给全局 window
 })(window)
