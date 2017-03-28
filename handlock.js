@@ -3,7 +3,9 @@
     this.el = option.el || w.document.body;
     this.n = option.n || 3;
     this.n = (this.n >= 2 && this.n <= 5) ? this.n : 3; // n 太大，你能记得住吗
-    this.touchPoints = [];
+    this.circles = []; // 用来存储 n*n 个 circle 的位置
+    this.touchCircles = [];// 用来存储已经触摸到的所有 circle
+    this.restCircles = [];// 还未触到的 circle
     this.touchFlag = false; // 用于判断是否 touch 到 circle
   }
   handLock.prototype = {
@@ -28,9 +30,8 @@
 
     createCircles: function(){ // 画圆
       var n = this.n;
-      this.r = this.width / (2 + 4 * n) // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
+      this.r = Math.floor(this.width / (2 + 4 * n)); // 这里是参考的，感觉这种画圆的方式挺合理的，方方圆圆
       r = this.r;
-      this.circles = []; // 用来存储 n 个点的位置
       for(var i = 0; i < n; i++){
         for(var j = 0; j < n; j++){
           var p = {
@@ -39,6 +40,7 @@
             id: i * 3 + j
           }
           this.circles.push(p);
+          this.restCircles.push(p);
         }
       }
       this.drawCircles();
@@ -48,40 +50,30 @@
       var self = this, temp, r = this.r;
       this.canvas.addEventListener('touchstart', function(e){
         var p = self.getTouchPos(e);
-        for(var i = 0; i < self.circles.length; i++){
-          temp = self.circles[i];
-          if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
-            self.touchPoints.push(temp);
-            self.touchFlag = true;
-            break;
-          }
-        }
+        self.judgePos(p);
       }, false)
       this.canvas.addEventListener('touchmove', function(e){
         var p = self.getTouchPos(e);
         if(self.touchFlag){
           self.update(p);
         }else{
-          for(var i = 0; i < self.circles.length; i++){
-            temp = self.circles[i];
-            if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
-              self.touchPoints.push(temp);
-              self.touchFlag = true;
-              break;
-            }
-          }
+          self.judgePos(p);
         }
       }, false)
       this.canvas.addEventListener('touchend', function(e){
         if(self.touchFlag){
           self.touchFlag = false;
-          self.touchPoints = [];
+          self.touchCircles.forEach(function(v){
+            self.restCircles.push(v);
+          })
+          self.touchCircles = [];
         }
       }, false)
     },
 
     update: function(p){ // 更新 touchmove
       this.drawCircles();
+      this.judgePos(p);
       this.drawLine(p);
     },
 
@@ -104,9 +96,9 @@
     drawLine: function(p){
       this.ctx.beginPath();
       this.ctx.lineWidth = 3;
-      this.ctx.moveTo(this.touchPoints[0].x, this.touchPoints[0].y);
-      for (var i = 1 ; i < this.touchPoints.length ; i++) {
-        this.ctx.lineTo(this.touchPoints[i].x, this.touchPoints[i].y);
+      this.ctx.moveTo(this.touchCircles[0].x, this.touchCircles[0].y);
+      for (var i = 1 ; i < this.touchCircles.length ; i++) {
+        this.ctx.lineTo(this.touchCircles[i].x, this.touchCircles[i].y);
       }
       this.ctx.lineTo(p.x, p.y);
       this.ctx.stroke();
@@ -120,6 +112,18 @@
         y: e.touches[0].clientY - rect.top
       };
       return p;
+    },
+
+    judgePos: function(p){ // 判断 触点 是否在 circle 內
+      for(var i = 0; i < this.restCircles.length; i++){
+        temp = this.restCircles[i];
+        if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
+          this.touchCircles.push(temp);
+          this.restCircles.splice(i, 1);
+          this.touchFlag = true;
+          break;
+        }
+      }
     }
   }
 

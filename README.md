@@ -119,3 +119,43 @@ drawLine: function(p1, p2){ // 画线
 ```
 
 然后就是监听 canvas 的 `touchstart`、`touchmove`、和 `touchend` 事件了。
+
+### 3. 画折线
+
+所谓的画折线，就是，将已经触摸到的点连起来，可以把它看作是画折线。
+
+首先，要用两个数组，一个数组用于已经 touch 过的点，另一个数组用于存储未 touch 的点，然后在 move 监听时候，对 touch 的相对位置进行判断，如果触到点，就把该点从未 touch 移到 touch 中，然后，画折线，思路也很简单。
+
+```javascript
+drawLine: function(p){ // 画折线
+  this.ctx.beginPath();
+  this.ctx.lineWidth = 3;
+  this.ctx.moveTo(this.touchCircles[0].x, this.touchCircles[0].y);
+  for (var i = 1 ; i < this.touchCircles.length ; i++) {
+    this.ctx.lineTo(this.touchCircles[i].x, this.touchCircles[i].y);
+  }
+  this.ctx.lineTo(p.x, p.y);
+  this.ctx.stroke();
+  this.ctx.closePath();
+},
+```
+
+```javascript
+judgePos: function(p){ // 判断 触点 是否在 circle 內
+  for(var i = 0; i < this.restCircles.length; i++){
+    temp = this.restCircles[i];
+    if(Math.abs(p.x - temp.x) < r && Math.abs(p.y - temp.y) < r){
+      this.touchCircles.push(temp);
+      this.restCircles.splice(i, 1);
+      this.touchFlag = true;
+      break;
+    }
+  }
+}
+```
+
+## 参考
+
+>[H5lock](https://github.com/lvming6816077/H5lock)
+
+>[Canvas教程](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial)
