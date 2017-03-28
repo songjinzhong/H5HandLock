@@ -174,6 +174,42 @@ drawPoints: function(){
 
 到现在为止，一个 H5 手势解锁的简易版已经基本完成。
 
+## password
+
+为了要实现记住和重置密码的功能，把 password 保存在 localStorage 中，但首先要添加必要的 html 和样式。
+
+### 1. 添加 message 和 单选框
+
+为了尽可能的使界面简洁（越丑越好），直接在 body 后面添加了：
+
+```html
+<div id="select">
+  <div class="message">请输入手势密码</div>
+  <div class="radio">
+    <label><input type="radio" name="pass">设置手势密码</label>
+    <label><input type="radio" name="pass">验证手势密码</label>
+  </div>
+</div>
+```
+
+将添加到 dom 已 option 的形式传给 handLock：
+
+```javascript
+var select = document.getElementById('select'),
+  message = select.getElementsByClassName('message')[0],
+  radio = select.getElementsByClassName('radio')[0],
+  setPass = radio.children[0].children[0],
+  checkPass = radio.children[1].children[0];
+var h = new handLock({
+  el: document.getElementById('handlock'),
+  message: message,
+  setPass: setPass,
+  checkPass: checkPass,
+  n: 3
+});
+h.init();
+```
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)

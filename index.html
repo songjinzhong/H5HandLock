@@ -8,18 +8,36 @@
   <meta name="email" content="songjz.ecnu@gmail.com">
   <style type="text/css">
     *{ padding: 0;margin: 0; }
-    html, body, #handlock{ width: 100%; height: 100%;}
-    body{ background-color: #575d6f; text-align: center;}
-    #handlock { max-width: 500px; min-width: 300px; margin: 0 auto; }
+    html, body{ width: 100%; height: 100%;}
+    body{ background-color: #f0f0f2; text-align: center;}
+    #handlock { width: 100%; height: auto;max-width: 500px; min-width: 300px; margin: 0 auto; }
     #handlock canvas{ margin: 0 auto; }
+    #select{ font-size: 20px; font-weight: bold; }
+    #select .message{ color: red; padding: 0 10px;}
+    #select .radio label{ display: block; margin: 10px 0 }
   </style>
 </head>
 <body>
   <div id="handlock"></div>
+  <div id="select">
+    <div class="message">请输入手势密码</div>
+    <div class="radio">
+      <label><input type="radio" name="pass">设置手势密码</label>
+      <label><input type="radio" name="pass">验证手势密码</label>
+    </div>
+  </div>
   <script type="text/javascript" src="handlock.js"></script>
   <script type="text/javascript">
+    var select = document.getElementById('select'),
+      message = select.getElementsByClassName('message')[0],
+      radio = select.getElementsByClassName('radio')[0],
+      setPass = radio.children[0].children[0],
+      checkPass = radio.children[1].children[0];
     var h = new handLock({
       el: document.getElementById('handlock'),
+      message: message,
+      setPass: setPass,
+      checkPass: checkPass,
       n: 3
     });
     h.init();
