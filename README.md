@@ -396,6 +396,22 @@ if(succ){
 
 那么，一个可以演示的版本就生成了，尽管还存在一些 bug，随后会来解决。（详情分支 password）
 
+## 一些 bugs
+
+有些 bugs 在做的时候就发现了，一些 bug 后来用手机测试的时候才发现，比如，我用 chrome 的时候，没有察觉这个 bug，当我用 android 手机 chrome 浏览器测试的时候，发现当我 touchmove 向下的时候，会触发浏览器的下拉刷新，解决办法：加了一个 `preventDefault`，没想到居然成功了。
+
+```javascript
+this.canvas.addEventListener('touchmove', function(e){
+  e.preventDefault ? e.preventDefault() : null;
+  var p = self.getTouchPos(e);
+  if(self.touchFlag){
+    self.update(p);
+  }else{
+    self.judgePos(p);
+  }
+}, false)
+```
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)

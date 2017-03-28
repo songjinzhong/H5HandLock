@@ -68,6 +68,7 @@
         self.judgePos(p);
       }, false)
       this.canvas.addEventListener('touchmove', function(e){
+        e.preventDefault ? e.preventDefault() : null;
         var p = self.getTouchPos(e);
         if(self.touchFlag){
           self.update(p);
