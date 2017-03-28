@@ -154,6 +154,26 @@ judgePos: function(p){ // 判断 触点 是否在 circle 內
 }
 ```
 
+### 4. 标记已画
+
+前面已经说了，我们把已经 touch 的点（圆）放到数组中，这个时候需要将这些已经 touch 的点给标记一下，在圆心处画一个小实心圆：
+
+```javascript
+drawPoints: function(){
+  for (var i = 0 ; i < this.touchCircles.length ; i++) {
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.beginPath();
+    this.ctx.arc(this.touchCircles[i].x, this.touchCircles[i].y, this.r / 2, 0, Math.PI * 2, true);
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+}
+```
+
+同时添加一个 reset 函数，当 touchend 的时候调用，400ms 调用 reset 重置 canvas。
+
+到现在为止，一个 H5 手势解锁的简易版已经基本完成。
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)

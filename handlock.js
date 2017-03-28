@@ -67,6 +67,9 @@
             self.restCircles.push(v);
           })
           self.touchCircles = [];
+          setTimeout(function(){
+            self.reset();
+          }, 400)
         }
       }, false)
     },
@@ -75,6 +78,7 @@
       this.drawCircles();
       this.judgePos(p);
       this.drawLine(p);
+      this.drawPoints();
     },
 
     drawCircle: function(x, y){ // 画圆
@@ -105,6 +109,16 @@
       this.ctx.closePath();
     },
 
+    drawPoints: function(){
+      for (var i = 0 ; i < this.touchCircles.length ; i++) {
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(this.touchCircles[i].x, this.touchCircles[i].y, this.r / 2, 0, Math.PI * 2, true);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
+    },
+
     getTouchPos: function(e){ // 获得触摸点的相对位置
       var rect = e.target.getBoundingClientRect();
       var p = { // 相对坐标
@@ -124,6 +138,10 @@
           break;
         }
       }
+    },
+
+    reset: function(){
+      this.drawCircles();
     }
   }
 
