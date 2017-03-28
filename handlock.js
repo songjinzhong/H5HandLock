@@ -88,6 +88,21 @@
           }, 400)
         }
       }, false)
+      this.dom.setPass.addEventListener('click', function(e){
+        self.lsPass.model = 2;
+        self.updateMessage();
+        self.showInfo('请设置密码', 1000);
+      })
+      this.dom.checkPass.addEventListener('click', function(e){
+        if(self.lsPass.pass){
+          self.lsPass.model = 1;
+          self.updateMessage();
+          self.showInfo('请验证密码', 1000)
+        }else{
+          self.showInfo('请先设置密码', 1000);
+          self.updateMessage();
+        }
+      })
     },
 
     update: function(p){ // 更新 touchmove
@@ -134,6 +149,7 @@
         }else{
           succ = true; // 密码正确，localStorage 存储，并设置状态为 model 1
           w.localStorage.setItem('HandLockPass', this.lsPass.temp.join('-')); // 存储字符串
+          this.showInfo('密码设置成功', 1000);
           this.lsPass.model = 1; 
           this.lsPass.pass = this.lsPass.temp;
           this.updateMessage();
@@ -242,7 +258,7 @@
       info.style.display = 'block';
       setTimeout(function(){
         info.style.display = '';
-      }, 1000)
+      }, timer || 1000)
     }
   }
 

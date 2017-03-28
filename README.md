@@ -349,6 +349,30 @@ checkPass: function(){
 
 密码的设置要参考前面那张图，要时刻警惕状态的改变。
 
+### 4. 手动重置密码
+
+思路也很简单，就是添加点击事件，点击之后，改变 model 即可，点击事件如下：
+
+```javascript
+this.dom.setPass.addEventListener('click', function(e){
+  self.lsPass.model = 2; // 改变 model 为设置密码
+  self.updateMessage(); // 更新 message
+  self.showInfo('请设置密码', 1000);
+})
+this.dom.checkPass.addEventListener('click', function(e){
+  if(self.lsPass.pass){
+    self.lsPass.model = 1;
+    self.updateMessage();
+    self.showInfo('请验证密码', 1000)
+  }else{
+    self.showInfo('请先设置密码', 1000);
+    self.updateMessage();
+  }
+})
+```
+
+**ps：这里面还有几个小的 bug**，因为 model 只有 3 个，所以设置的时候，当点击重置密码的时候，没有设置密码成功，又切成验证密码状态，此时无法提升沿用旧密码，原因是 **model 只有三个**。
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)
