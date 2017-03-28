@@ -1,0 +1,22 @@
+{
+  "name": "h5handlock",
+  "version": "1.0.0",
+  "description": "炫酷的 H5 手势密码",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/songjinzhong/H5HandLock.git"
+  },
+  "author": "songjz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/songjinzhong/H5HandLock/issues"
+  },
+  "homepage": "https://github.com/songjinzhong/H5HandLock#readme",
+  "dependencies": {
+    "express": "^4.15.2"
+  }
+}
