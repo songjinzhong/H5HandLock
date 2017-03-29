@@ -116,8 +116,6 @@
     },
 
     update: function(p){ // 更新 touchmove
-      //this.drawCircles();
-      console.log('move')
       this.judgePos(p);
       this.drawLine2TouchPos(p);
       if(this.reDraw){
@@ -219,7 +217,6 @@
     },
 
     drawLine: function(){ // 画折线
-      console.log('draw line')
       var len = this.touchCircles.length;
       if(len >= 2){
         this.ctx.beginPath();
@@ -245,7 +242,6 @@
     },
 
     drawPoints: function(){ // 画实心圆(点)
-      console.log('draw point')
       var i = this.touchCircles.length - 1;
       if(i >= 0){
         this.ctx.fillStyle = '#ffa726';

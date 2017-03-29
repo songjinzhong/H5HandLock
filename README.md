@@ -416,6 +416,85 @@ this.canvas.addEventListener('touchmove', function(e){
 }, false)
 ```
 
+## 关于优化
+
+性能优化一直都是一个大问题，不要以为前端不需要考虑内存，就可以随便写代码。
+
+之前在设计自己网页的时候，用到了滚动，鼠标滑轮轻轻一碰，滚动函数就执行了几十多则几百次，之前也考虑过解决办法，比如[防抖和节流](http://www.codeceo.com/article/web-high-performance-scroll.html)。
+
+### 优化 canvas 部分
+
+对于 touchmove 函数，原理都是一样的，手指一划，就执行了 n 多次，这个问题后面在解决，先来看另一个问题。
+
+touchmove 是一个高频函数，看到这里，如果你并没有仔细看我的代码，那你对我采用的 canvas 画图方式可能不太了解，下面这个是 touchmove 函数干了哪些事：
+
+1. 先判断，如果当前处于未选中一个密码状态，则继续监视当前的位置，直到选中第一个密码，进入第二步；
+2. 进入 update 函数，update 函数主要干四件事，重绘圆（密码）、判断当前位置、画点、画线；
+
+第二步是一个很揪心的动作，为什么每次都要重绘圆，点和线呢？
+
+![](imgs/p1.png)
+
+上面这个图可以很好的说明问题，因为在设置或验证密码的过程中，我们需要用一条线来连接触点到当前的最后一个密码，并且当 touchmove 的时候，能看到它们在变化。这个功能很棒，可以勾勒出 touchmove 的轨迹。
+
+但是，这就必须要时刻刷新 canvas，性能大大地降低，**刷新的那可是整个 canvas。**
+
+因为 canvas 只有一个，既要画背景圆（密码），又要画已选密码的点，和折线。这其中好多步骤，自始至终只需要一次就好了，比如背景圆，只需在启动的时候画一次，已选密码，只要当 touchCircles 新加元素的时候才会用一次，还不用重绘，只要画就可以了。折线分成两部分，一部分是已选密码之间的连线，还有就是最后一个密码点到当前触点之间的连线。
+
+**如果有两个 canvas 就好了，一个存储静态的，一个专门用于重绘**。
+
+为什么不可以有呢！
+
+我的解决思路是，现在有两个 canvas，一个在底层，作为描绘静态的圆、点和折线，另一个在上层，一方面监听 touchmove 事件，另一方面不停地重绘最后一个点到当前触点之间的线。如果这样可以的话，touchmove 函数执行一次的效率大大提高。
+
+插入第二个 canvas：
+
+```javascript
+var canvas2 = canvas.cloneNode(canvas, true);
+canvas2.style.position = 'absolute';//让上层 canvas 覆盖底层 canvas
+canvas2.style.top = '0';
+canvas2.style.left = '0';
+this.el.appendChild(canvas2);
+this.ctx2 = canvas2.getContext('2d');
+```
+
+要改换对第二个 ctx2 进行 touch 监听，并设置一个 `this.reDraw` 参数，表示有新的密码添加进来，需要对点和折线添加新内容， update 函数要改成这样：
+
+```javascript
+update: function(p){ // 更新 touchmove
+  this.judgePos(p); // 每次都要判断是否在密码內
+  this.drawLine2TouchPos(p); // 新加函数，用于绘最后一个密码到触点之间的线
+  if(this.reDraw){ // 有新的密码加进来
+    this.reDraw = false;
+    this.drawPoints(); // 添加新点
+    this.drawLine();// 添加新线
+  }
+},
+```
+
+```javascript
+drawLine2TouchPos: function(p){
+  var len = this.touchCircles.length;
+  if(len >= 1){
+    this.ctx2.clearRect(0, 0, this.width, this.width); // 先清空
+    this.ctx2.beginPath();
+    this.ctx2.lineWidth = 3;
+    this.ctx2.moveTo(this.touchCircles[len - 1].x, this.touchCircles[len - 1].y);
+    this.ctx2.lineTo(p.x, p.y);
+    this.ctx2.stroke();
+    this.ctx2.closePath();
+  }
+},
+```
+
+相应的 drawPoints 和 drawLine 函数也要对应修改，由原理画所有的，到现在只需要画新加的。
+
+效果怎么样：
+
+![](imgs/p2.png)
+
+move 函数执行多次，而其他函数只有当新密码加进来的时候才执行一次。
+
 ## 参考
 
 >[H5lock](https://github.com/lvming6816077/H5lock)
@@ -423,3 +502,5 @@ this.canvas.addEventListener('touchmove', function(e){
 >[Canvas教程](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial)
 
 >[js获取单选框里面的值](http://www.cnblogs.com/wangkongming/archive/2013/08/30/3291081.html)
+
+>[前端高性能滚动 scroll 及页面渲染优化](http://www.codeceo.com/article/web-high-performance-scroll.html)
