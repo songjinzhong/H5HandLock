@@ -1,6 +1,6 @@
 ## H5 手势解锁
 
-扫描在线查看：
+扫码在线查看：
 
 ![](imgs/url.png)
 
@@ -420,7 +420,7 @@ this.canvas.addEventListener('touchmove', function(e){
 
 性能优化一直都是一个大问题，不要以为前端不需要考虑内存，就可以随便写代码。
 
-之前在设计自己网页的时候，用到了滚动，鼠标滑轮轻轻一碰，滚动函数就执行了几十多则几百次，之前也考虑过解决办法，比如[防抖和节流](http://www.codeceo.com/article/web-high-performance-scroll.html)。
+之前在设计自己网页的时候，用到了滚动，鼠标滑轮轻轻一碰，滚动函数就执行了几十多则几百次，之前也考虑过解决办法。
 
 ### 优化 canvas 部分
 
@@ -494,6 +494,68 @@ drawLine2TouchPos: function(p){
 ![](imgs/p2.png)
 
 move 函数执行多次，而其他函数只有当新密码加进来的时候才执行一次。
+
+### 加入节流函数
+
+之前也已经说过了，这个 touchmove 函数执行的次数比较多，尽管我们已经用两个 canvas 对重绘做了很大的优化，但 touchmove 还是有点大开销。
+
+这个时候我想到了防抖动和节流，首先防抖动肯定是不行的，万一我一直处于 touch 状态，重绘会卡死的，这个时候节流会好一些。[防抖和节流](http://www.codeceo.com/article/web-high-performance-scroll.html)。
+
+先写一个节流函数：
+
+```javascript
+throttle: function(func, delay, mustRun){
+  var timer, startTime = new Date(), self = this;
+  return function(){
+    var curTime = new Date(), args = arguments;
+    clearTimeout(timer);
+    if(curTime - startTime >= mustRun){
+      startTime = curTime;
+      func.apply(self, args);
+    }else{
+      timer = setTimeout(function(){
+        func.apply(self, args);
+      }, delay)
+    }
+  }
+}
+```
+
+节流函数的意思：在延迟为 delay 的时间内，如果函数再次触发，则重新计时，这个功能和防抖动是一样的，第三个参数 mustRun 是一个时间间隔，表示在大于 mustRun 后的一个函数可以直接执行。
+
+然后对 touchmove 的回调函数进行改造：
+
+```javascript
+var t = this.throttle(function(e){
+  e.preventDefault ? e.preventDefault() : null;
+  e.stopPropagation ? e.stopPropagation() : null;
+  var p = this.getTouchPos(e);
+  if(this.touchFlag){
+    this.update(p);
+  }else{
+    this.judgePos(p);
+  }
+}, 16, 16)
+this.canvas2.addEventListener('touchmove', t, false)
+```
+
+关于 delay 和 mustRun 的时间间隔问题，web 性能里有一个 16ms 的概念，就是说如果要达到每秒 60 帧，间隔为 1000/60 大约为 16 ms。如果间隔大于 16ms 则 fps 会比 60 低。
+
+鉴于此，我们这里将 delay 和 mustRun 都设为 16，在极端的情况下，也就是最坏的情况下，或许需要 15 + 15 = 30ms 才会执行一次，这个时候要设置两个 8 才合理，不过考虑到手指活动是一个连续的过程，怎么可能会每 15 秒执行一次，经过在线测试，发现设置成 16 效果还不错。
+
+性能真的能优化吗，我们来看两个图片，do 和 wantdo 表示真实执行和放到节流函数中排队准备执行。
+
+当 touchmove 速度一般或很快的时候：
+
+![](imgs/p3.png)
+
+当 touchmove 速度很慢的时候：
+
+![](imgs/p4.png)
+
+可以看出来，滑动过程中，速度一般和快速，平均优化了一半，慢速效果也优化了 20 到 30% 之间，平时手势锁解锁时候，肯定速度很快。可见，节流的优化还是很明显的。
+
+关键是，优化之后的流程性，没有受到任何影响。
 
 ## 参考
 

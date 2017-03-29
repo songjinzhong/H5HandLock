@@ -73,22 +73,29 @@
     },
 
     createListener: function(){ // 创建监听事件
-      var self = this, temp, r = this.r;
+      var self = this, temp, r = this.r, over = false;
       this.canvas2.addEventListener('touchstart', function(e){
+        self.do = 0;
+        self.wantdo = 0;
         var p = self.getTouchPos(e);
+        self.restCircles = self.restCircles.concat(self.touchCircles.splice(0));
         self.judgePos(p);
       }, false)
-      this.canvas2.addEventListener('touchmove', function(e){
+      var t = this.throttle(function(e){
+        this.do ++;
         e.preventDefault ? e.preventDefault() : null;
         e.stopPropagation ? e.stopPropagation() : null;
-        var p = self.getTouchPos(e);
-        if(self.touchFlag){
-          self.update(p);
+        var p = this.getTouchPos(e);
+        if(this.touchFlag){
+          this.update(p);
         }else{
-          self.judgePos(p);
+          this.judgePos(p);
         }
-      }, false)
+      }, 16, 16)
+      this.canvas2.addEventListener('touchmove', t, false)
       this.canvas2.addEventListener('touchend', function(e){
+        console.log('do: ' + self.do);
+        console.log('wantdo: ' + self.wantdo);
         if(self.touchFlag){
           self.touchFlag = false;
           self.checkPass();
@@ -299,6 +306,23 @@
       setTimeout(function(){
         info.style.display = '';
       }, timer || 1000)
+    },
+
+    throttle: function(func, delay, mustRun){ // 节流函数
+      var timer, startTime = new Date(), self = this;
+      return function(){
+        self.wantdo ++;
+        var curTime = new Date(), args = arguments;
+        clearTimeout(timer);
+        if(curTime - startTime >= mustRun){
+          startTime = curTime;
+          func.apply(self, args);
+        }else{
+          timer = setTimeout(function(){
+            func.apply(self, args);
+          }, delay)
+        }
+      }
     }
   }
 
