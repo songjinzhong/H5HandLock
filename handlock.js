@@ -83,8 +83,6 @@
       }, false)
       var t = this.throttle(function(e){
         //this.do ++;
-        e.preventDefault ? e.preventDefault() : null;
-        e.stopPropagation ? e.stopPropagation() : null;
         var p = this.getTouchPos(e);
         if(this.touchFlag){
           this.update(p);
@@ -310,8 +308,14 @@
 
     throttle: function(func, delay, mustRun){ // 节流函数
       var timer, startTime = new Date(), self = this;
-      return function(){
+      return function(e){
         //self.wantdo ++;
+
+        /* 修复一个 bug，由于延迟导致的 preventDefault 失效 */
+        if(e){
+          e.preventDefault ? e.preventDefault() : null;
+          e.stopPropagation ? e.stopPropagation() : null;
+        }
         var curTime = new Date(), args = arguments;
         clearTimeout(timer);
         if(curTime - startTime >= mustRun){
