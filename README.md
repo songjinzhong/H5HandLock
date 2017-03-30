@@ -416,6 +416,24 @@ this.canvas.addEventListener('touchmove', function(e){
 }, false)
 ```
 
+### 关于 showInfo 
+
+由于showInfo 中有 setTimeout 函数，可以看到函数里的演出为 1s，导致如果我们操作的速度比较快，在 1s 内连续 show 了很多个 info，后面的 info 会被第一个 info 的 setTimeout 弄乱，显示的时间小于 1s，或更短。比如，当重复点击设置手势密码和验证手势密码，会产生这个 bug。
+
+解决办法有两个，一个是增加一个专门用于显示的数组，每次从数组中取值然后显示。另一种解题思路和防抖动的思路很像，就是当有一个新的 show 到来时，把之前的那个 setTimeout 清除掉。
+
+```javascript
+showInfo: function(message, timer){ // 专门用来显示 info
+  clearTimeout(this.showInfo.timer);
+  var info = this.dom.info;
+  info.innerHTML = message;
+  info.style.display = 'block';
+  this.showInfo.timer = setTimeout(function(){
+    info.style.display = '';
+  }, timer || 1000)
+},
+```
+
 ## 关于优化
 
 性能优化一直都是一个大问题，不要以为前端不需要考虑内存，就可以随便写代码。

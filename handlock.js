@@ -298,10 +298,11 @@
     },
 
     showInfo: function(message, timer){ // 专门用来显示 info
+      clearTimeout(this.showInfo.timer);
       var info = this.dom.info;
       info.innerHTML = message;
       info.style.display = 'block';
-      setTimeout(function(){
+      this.showInfo.timer = setTimeout(function(){
         info.style.display = '';
       }, timer || 1000)
     },
