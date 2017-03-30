@@ -4,11 +4,20 @@
 
 ![](imgs/url.png)
 
+### Run in local
+
+```
+npm install
+npm start
+```
+
+打开浏览器输入：`127.0.0.1:8080`。
+
 首先，我要说明一下，对于这个项目，我是参考别人的，[H5lock](https://github.com/lvming6816077/H5lock)。
 
 我觉得一个比较合理的解法应该是利用 canvas 来实现，不知道有没有大神用 css 来实现。如果纯用 css 的话，可以将连线先设置 `display: none`，当手指划过的时候，显示出来。光设置这些应该就非常麻烦吧。
 
-之前了解过 canvas，但没有真正的写过，下面就来介绍我这几学习 canvas 并实现 H5 手势解锁的过程。
+之前了解过 canvas，但没有真正的写过，下面就来介绍我这几天学习 canvas 并实现 H5 手势解锁的过程。
 
 ## 准备及布局设置
 
@@ -26,13 +35,14 @@
   w.handLock = handLock;
 })(window)
 
+// 使用
 new handLock({
   el: document.getElementById('id'),
   ...
 }).init();
 ```
 
-传入的参数中要包含一个 dom 对象，会在这个 dom 对象內创建一个 canvas。
+传入的参数中要包含一个 dom 对象，会在这个 dom 对象內创建一个 canvas。当然还有一些其他的 dom 参数，比如 message，info 等。
 
 关于 css 的话，懒得去新建文件了，就直接內联了。
 
@@ -88,7 +98,7 @@ drawCircle: function(ctx, x, y){ // 画圆函数
 }
 ```
 
-画圆函数，需要注意：如何确定圆的半径和每个圆的圆心坐标（这个我是参考的），如果以圆心为中点，每个圆上下左右各扩展一个半径的距离，同时为了防止四边太挤，四周在填充一个半径的距离。那么得到的半径就是 `width / ( 4 * n + 2)`，对应也可以算出每个圆所在的圆心坐标，**GET**。
+画圆函数，需要注意：如何确定圆的半径和每个圆的圆心坐标（这个我是参考的），如果以圆心为中点，每个圆上下左右各扩展一个半径的距离，同时为了防止四边太挤，四周在填充一个半径的距离。那么得到的半径就是 `width / ( 4 * n + 2)`，对应也可以算出每个圆所在的圆心坐标，也有一套公式，**GET**。
 
 ### 2. 画线
 
@@ -206,15 +216,14 @@ var el = document.getElementById('handlock'),
   radio = select.getElementsByClassName('radio')[0],
   setPass = radio.children[0].children[0],
   checkPass = radio.children[1].children[0];
-var h = new handLock({
+new handLock({
   el: el,
   info: info,
   message: message,
   setPass: setPass,
   checkPass: checkPass,
   n: 3
-});
-h.init();
+}).init();
 ```
 
 ### 2. info 信息显示
@@ -248,7 +257,7 @@ showInfo: function(message, timer){ // 专门用来显示 info
 
 ![](imgs/llc.jpeg)
 
-这三种 model ，只要处理好它们之间如何跳转就 ok 了。
+这三种 model ，只要处理好它们之间如何跳转就 ok 了，即状态的改变。
 
 所以就有了 initPass：
 
@@ -392,9 +401,9 @@ drawEndCircles: function(color){ // end 时重绘已经 touch 的圆
 
 // 调用
 if(succ){
-  this.drawEndCircles('#2CFF26');
+  this.drawEndCircles('#2CFF26'); // 绿色
 }else{
-  this.drawEndCircles('red');
+  this.drawEndCircles('red'); // 红色
 }
 ```
 
@@ -421,6 +430,8 @@ this.canvas.addEventListener('touchmove', function(e){
 由于showInfo 中有 setTimeout 函数，可以看到函数里的演出为 1s，导致如果我们操作的速度比较快，在 1s 内连续 show 了很多个 info，后面的 info 会被第一个 info 的 setTimeout 弄乱，显示的时间小于 1s，或更短。比如，当重复点击设置手势密码和验证手势密码，会产生这个 bug。
 
 解决办法有两个，一个是增加一个专门用于显示的数组，每次从数组中取值然后显示。另一种解题思路和防抖动的思路很像，就是当有一个新的 show 到来时，把之前的那个 setTimeout 清除掉。
+
+这里采用第二种思路：
 
 ```javascript
 showInfo: function(message, timer){ // 专门用来显示 info
@@ -455,7 +466,7 @@ showInfo: function(message, timer){ // 专门用来显示 info
 touchmove 是一个高频函数，看到这里，如果你并没有仔细看我的代码，那你对我采用的 canvas 画图方式可能不太了解，下面这个是 touchmove 函数干了哪些事：
 
 1. 先判断，如果当前处于未选中一个密码状态，则继续监视当前的位置，直到选中第一个密码，进入第二步；
-2. 进入 update 函数，update 函数主要干四件事，重绘圆（密码）、判断当前位置、画点、画线；
+2. 进入 update 函数，update 函数主要干四件事，重绘圆（密码）、判断当前位置、重绘点、重绘线；
 
 第二步是一个很揪心的动作，为什么每次都要重绘圆，点和线呢？
 
@@ -471,7 +482,7 @@ touchmove 是一个高频函数，看到这里，如果你并没有仔细看我�
 
 为什么不可以有呢！
 
-我的解决思路是，现在有两个 canvas，一个在底层，作为描绘静态的圆、点和折线，另一个在上层，一方面监听 touchmove 事件，另一方面不停地重绘最后一个点到当前触点之间的线。如果这样可以的话，touchmove 函数执行一次的效率大大提高。
+我的解决思路是，现在有两个 canvas，一个在底层，作为描绘静态的圆、点和折线，另一个在上层，一方面监听 touchmove 事件，另一方面不停地重绘最后一个密码点的圆心到当前触点之间的线。如果这样可以的话，touchmove 函数执行一次的效率大大提高。
 
 插入第二个 canvas：
 
@@ -488,8 +499,8 @@ this.ctx2 = canvas2.getContext('2d');
 
 ```javascript
 update: function(p){ // 更新 touchmove
-  this.judgePos(p); // 每次都要判断是否在密码內
-  this.drawLine2TouchPos(p); // 新加函数，用于绘最后一个密码到触点之间的线
+  this.judgePos(p); // 每次都要判断
+  this.drawLine2TouchPos(p); // 新加函数，用于绘最后一个密码点点圆心到触点之间的线
   if(this.reDraw){ // 有新的密码加进来
     this.reDraw = false;
     this.drawPoints(); // 添加新点
@@ -525,7 +536,7 @@ move 函数执行多次，而其他函数只有当新密码加进来的时候才
 
 之前也已经说过了，这个 touchmove 函数执行的次数比较多，尽管我们已经用两个 canvas 对重绘做了很大的优化，但 touchmove 还是有点大开销。
 
-这个时候我想到了防抖动和节流，首先防抖动肯定是不行的，万一我一直处于 touch 状态，重绘会卡死的，这个时候节流会好一些。[防抖和节流](http://www.codeceo.com/article/web-high-performance-scroll.html)。
+这个时候我想到了防抖动和节流，首先防抖动肯定是不行的，万一我一直处于 touch 状态，重绘会延迟死的，这个时候节流会好一些。[防抖和节流](http://www.codeceo.com/article/web-high-performance-scroll.html)。
 
 先写一个节流函数：
 
@@ -547,7 +558,7 @@ throttle: function(func, delay, mustRun){
 }
 ```
 
-节流函数的意思：在延迟为 delay 的时间内，如果函数再次触发，则重新计时，这个功能和防抖动是一样的，第三个参数 mustRun 是一个时间间隔，表示在大于 mustRun 后的一个函数可以直接执行。
+节流函数的意思：在延迟为 delay 的时间内，如果函数再次触发，则重新计时，这个功能和防抖动是一样的，第三个参数 mustRun 是一个时间间隔，表示在时间间隔大于 mustRun 后的一个函数可以立即直接执行。
 
 然后对 touchmove 的回调函数进行改造：
 
@@ -581,7 +592,24 @@ this.canvas2.addEventListener('touchmove', t, false)
 
 可以看出来，滑动过程中，速度一般和快速，平均优化了一半，慢速效果也优化了 20 到 30% 之间，平时手势锁解锁时候，肯定速度很快。可见，节流的优化还是很明显的。
 
-关键是，优化之后的流程性，没有受到任何影响。
+**关键是，优化之后的流程性，没有受到任何影响。**
+
+这个节流函数最终还是出现了一个 bug：由于是延迟执行的，导致 `e.preventDefault` 失效，在手机浏览器向下滑会出现刷新的情况，这也算事件延迟的一个危害吧。
+
+解决办法：在节流函数提前取消默认事件：
+
+```javascript
+throttle: function(func, delay, mustRun){
+  var timer, startTime = new Date(), self = this;
+  return function(e){
+    if(e){
+      e.preventDefault ? e.preventDefault() : null; //提前取消默认事件，不要等到 setTimeout
+      e.stopPropagation ? e.stopPropagation() : null;
+    }
+    ...
+  }
+}
+```
 
 ## 总结
 

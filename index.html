@@ -38,15 +38,14 @@
       radio = select.getElementsByClassName('radio')[0],
       setPass = radio.children[0].children[0],
       checkPass = radio.children[1].children[0];
-    var h = new handLock({
+    new handLock({
       el: el,
       info: info,
       message: message,
       setPass: setPass,
       checkPass: checkPass,
       n: 3
-    });
-    h.init();
+    }).init();
   </script>
 </body>
 </html>

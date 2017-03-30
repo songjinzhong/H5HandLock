@@ -194,9 +194,9 @@
         }
       }
       if(succ){
-        this.drawEndCircles('#2CFF26');
+        this.drawEndCircles('#2CFF26');// 绿色
       }else{
-        this.drawEndCircles('red');
+        this.drawEndCircles('red');// 红色
       }
     },
 
