@@ -98,6 +98,7 @@
           self.touchFlag = false;
           self.checkPass();
           self.restCircles = self.restCircles.concat(self.touchCircles.splice(0));// 将touchCircle 清空
+          self.ctx2.clearRect(0, 0, this.width, this.width); // 提前做情况操作
           setTimeout(function(){
             self.reset();
           }, 400)

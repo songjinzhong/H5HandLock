@@ -434,6 +434,14 @@ showInfo: function(message, timer){ // 专门用来显示 info
 },
 ```
 
+### 解决小尾巴
+
+所谓的小尾巴，如下：
+
+![](imgs/p5.jpeg)
+
+解决办法也很简单，在 touchend 的时候，先进行 `clearRect` 就 ok 了。
+
 ## 关于优化
 
 性能优化一直都是一个大问题，不要以为前端不需要考虑内存，就可以随便写代码。
